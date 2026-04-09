@@ -1,0 +1,137 @@
+#import "RNBugKit.h"
+#import <UIKit/UIKit.h>
+#import <objc/runtime.h>
+
+static NSString *const kShakeNotification = @"RNBugKitShakeDetected";
+
+@implementation UIWindow (RNBugKit)
+
+- (void)rnbugkit_motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event
+{
+  [self rnbugkit_motionEnded:motion withEvent:event];
+
+  if (motion == UIEventSubtypeMotionShake) {
+    [[NSNotificationCenter defaultCenter]
+      postNotificationName:kShakeNotification
+      object:nil];
+  }
+}
+
+@end
+
+@implementation RNBugKit
+{
+  BOOL _hasListeners;
+  BOOL _shakeEnabled;
+}
+
+RCT_EXPORT_MODULE(RNBugKit)
+
++ (BOOL)requiresMainQueueSetup
+{
+  return YES;
+}
+
+// Swizzle la load time — o singura data per app lifecycle
++ (void)load
+{
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    Class class = [UIWindow class];
+    SEL original = @selector(motionEnded:withEvent:);
+    SEL swizzled = @selector(rnbugkit_motionEnded:withEvent:);
+    method_exchangeImplementations(
+      class_getInstanceMethod(class, original),
+      class_getInstanceMethod(class, swizzled)
+    );
+  });
+}
+
+- (instancetype)init
+{
+  if (self = [super init]) {
+    _shakeEnabled = NO;
+    [[NSNotificationCenter defaultCenter]
+      addObserver:self
+      selector:@selector(handleShakeNotification)
+      name:kShakeNotification
+      object:nil];
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (NSArray<NSString *> *)supportedEvents
+{
+  return @[@"RNBugKitShake"];
+}
+
+- (void)startObserving
+{
+  _hasListeners = YES;
+}
+
+- (void)stopObserving
+{
+  _hasListeners = NO;
+}
+
+- (void)handleShakeNotification
+{
+  if (_hasListeners && _shakeEnabled) {
+    [self sendEventWithName:@"RNBugKitShake" body:nil];
+  }
+}
+
+
+RCT_EXPORT_METHOD(setShakeEnabled:(BOOL)enabled)
+{
+  _shakeEnabled = enabled;
+}
+
+RCT_EXPORT_METHOD(captureScreen:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIWindow *window = nil;
+
+    if (@available(iOS 13.0, *)) {
+      for (UIWindowScene *scene in [UIApplication sharedApplication].connectedScenes) {
+        if (scene.activationState == UISceneActivationStateForegroundActive) {
+          window = scene.windows.firstObject;
+          break;
+        }
+      }
+    }
+
+    if (!window) {
+      window = [UIApplication sharedApplication].keyWindow;
+    }
+
+    if (!window) {
+      reject(@"NO_WINDOW", @"Could not find active window", nil);
+      return;
+    }
+
+    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc]
+      initWithBounds:window.bounds];
+
+    UIImage *image = [renderer imageWithActions:^(UIGraphicsImageRendererContext *ctx) {
+      [window drawViewHierarchyInRect:window.bounds afterScreenUpdates:YES];
+    }];
+
+    NSData *jpegData = UIImageJPEGRepresentation(image, 0.8);
+    if (!jpegData) {
+      reject(@"SCREENSHOT_FAILED", @"Could not convert image to JPEG", nil);
+      return;
+    }
+
+    resolve([jpegData base64EncodedStringWithOptions:0]);
+  });
+}
+
+@end
