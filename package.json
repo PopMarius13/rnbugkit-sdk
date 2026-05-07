@@ -26,8 +26,9 @@
   "author": "Marius Pop",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/react-native": "^0.73.0"
+    "@types/react": "^19.2.14",
+    "@types/react-native": "^0.73.0",
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
     "react-native": ">=0.70.0"

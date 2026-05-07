@@ -1,4 +1,10 @@
 export { BugKit } from "./BugKit";
+export { ReportBugButton } from "./ReportBugButton";
+export type { ReportBugButtonProps } from "./ReportBugButton";
+export { useReportBug } from "./useReportBug";
+export type { UseReportBugResult } from "./useReportBug";
+export { BugKitBoundary } from "./BugKitBoundary";
+export type { BugKitBoundaryProps } from "./BugKitBoundary";
 export type {
   BugKitConfig,
   BugReportPayload,
@@ -10,4 +16,5 @@ export type {
   NetworkBatchPayload,
   FailureType,
   BugReportKind,
+  BugLevel,
 } from "./types";

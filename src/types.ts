@@ -1,12 +1,17 @@
 export interface BugKitConfig {
   apiKey: string;
-  baseUrl: string;
   appVersion: string;
   redactedKeys?: string[];
   slowRequestThreshold?: number;
   flushInterval?: number;
   enabled?: boolean;
+  enabledInDev?: boolean;
   persistQueue?: boolean;
+  sampleRate?: number;
+  dedupWindowMs?: number;
+  onBeforeSend?: (
+    payload: BugReportPayload,
+  ) => BugReportPayload | null | Promise<BugReportPayload | null>;
 }
 
 export interface DeviceInfo {
@@ -18,7 +23,8 @@ export interface DeviceInfo {
   rn_version: string;
 }
 
-export type BugReportKind = "crash" | "manual";
+export type BugReportKind = "crash" | "manual" | "message";
+export type BugLevel = "info" | "warning" | "error";
 
 export interface NavigationEntry {
   screen: string;
@@ -33,7 +39,9 @@ export interface UserAction {
 
 export interface BugReportPayload {
   kind: BugReportKind;
+  level?: BugLevel;
   title: string;
+  description?: string;
   stack_trace?: string;
   app_version: string;
   occurred_at: string;
@@ -41,7 +49,8 @@ export interface BugReportPayload {
   navigation_history: NavigationEntry[];
   user_actions: UserAction[];
   component_state?: Record<string, unknown>;
-  screenshot?: string;
+  context?: Record<string, unknown>;
+  repeated_count?: number;
 }
 
 export type FailureType = "error_status" | "timeout" | "no_connection" | "slow";

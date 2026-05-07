@@ -185,9 +185,10 @@ function interceptXHR(): void {
 
   XMLHttpRequest.prototype.send = function (
     this: XMLHttpRequest & { _rnbugkit?: { url: string; method: string } },
+    body?: Document | XMLHttpRequestBodyInit | null,
   ) {
     const meta = this._rnbugkit;
-    if (!meta) return originalXHRSend!.call(this);
+    if (!meta) return originalXHRSend!.call(this, body);
 
     const start = Date.now();
 
@@ -219,7 +220,7 @@ function interceptXHR(): void {
       }
     });
 
-    return originalXHRSend!.call(this);
+    return originalXHRSend!.call(this, body);
   };
 }
 
