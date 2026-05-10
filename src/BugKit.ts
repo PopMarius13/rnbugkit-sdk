@@ -38,14 +38,17 @@ async function sendBugReport(payload: BugReportPayload): Promise<void> {
   if (!finalPayload) return;
 
   try {
-    const response = await fetch(`http://127.0.0.1:3000/api/v1/bug_reports`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": config.apiKey,
-      },
-      body: JSON.stringify(finalPayload),
-    });
+    const response = await fetch(
+      `https://rnbugkit-api.onrender.com/api/v1/bug_reports`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": config.apiKey,
+        },
+        body: JSON.stringify(finalPayload),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Server returned ${response.status}`);
@@ -60,14 +63,17 @@ async function sendNetworkBatch(payload: NetworkBatchPayload): Promise<void> {
   if (payload.failures.length === 0 && payload.stats.length === 0) return;
 
   try {
-    const response = await fetch(`http://127.0.0.1:3000/api/v1/network_requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": config.apiKey,
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `https://rnbugkit-api.onrender.com/api/v1/network_requests`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": config.apiKey,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Server returned ${response.status}`);
@@ -99,7 +105,7 @@ export const BugKit = {
   async init(userConfig: BugKitConfig): Promise<void> {
     if (config) {
       console.warn(
-        "[RNBugKit] Already initialized. Call BugKit.destroy() first.",
+        "[RNBugKit] Already initialized. Call BugKit.destroy() first."
       );
       return;
     }
@@ -124,15 +130,20 @@ export const BugKit = {
     config = merged;
 
     await Queue.init(config.persistQueue);
-    CrashHandler.install(config.appVersion, config.redactedKeys, sendBugReport, {
-      sampleRate: config.sampleRate,
-      dedupWindowMs: config.dedupWindowMs,
-    });
+    CrashHandler.install(
+      config.appVersion,
+      config.redactedKeys,
+      sendBugReport,
+      {
+        sampleRate: config.sampleRate,
+        dedupWindowMs: config.dedupWindowMs,
+      }
+    );
     NetworkMonitor.install(
       config.appVersion,
       config.slowRequestThreshold,
       config.flushInterval,
-      sendNetworkBatch,
+      sendNetworkBatch
     );
 
     appStateSubscription = AppState.addEventListener(
@@ -144,7 +155,7 @@ export const BugKit = {
         if (state === "background") {
           await NetworkMonitor.flush();
         }
-      },
+      }
     );
 
     await flushQueue();
@@ -192,7 +203,7 @@ export const BugKit = {
 
   async captureMessage(
     message: string,
-    level: BugLevel = "info",
+    level: BugLevel = "info"
   ): Promise<void> {
     if (!config?.enabled) return;
 
@@ -202,7 +213,7 @@ export const BugKit = {
 
   async captureException(
     error: Error,
-    level: BugLevel = "error",
+    level: BugLevel = "error"
   ): Promise<void> {
     if (!config?.enabled) return;
 
