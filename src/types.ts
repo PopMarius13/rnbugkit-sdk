@@ -32,7 +32,7 @@ export interface NavigationEntry {
 }
 
 export interface UserAction {
-  action: "tap" | "scroll" | "navigate" | "shake";
+  action: "tap" | "scroll" | "navigate" | "shake" | "submit" | "focus";
   target?: string;
   timestamp: string;
 }
