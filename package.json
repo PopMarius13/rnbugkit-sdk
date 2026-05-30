@@ -1,6 +1,6 @@
 {
   "name": "rnbugkit-sdk",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "Bug reporting and network monitoring SDK for React Native",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
